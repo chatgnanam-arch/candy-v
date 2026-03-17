@@ -7,6 +7,8 @@ export type TileColor =
   | 'peach'
   | 'prism';
 
+export type CandyThemeId = 'sugar-sunrise' | 'citrus-splash' | 'berry-parade' | 'frosted-market';
+
 export type NormalTileColor = Exclude<TileColor, 'prism'>;
 
 export type SpecialTileType = 'stripedH' | 'stripedV' | 'colorBomb';
@@ -98,4 +100,5 @@ export type PersistedProfile = {
   tutorialDismissed: boolean;
   soundEnabled: boolean;
   reducedMotion: boolean;
+  candyThemeId: CandyThemeId;
 };

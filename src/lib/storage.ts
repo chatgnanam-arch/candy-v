@@ -1,4 +1,5 @@
 import type { PersistedProfile } from '../game/types';
+import { DEFAULT_THEME_ID } from './themes';
 
 const STORAGE_KEY = 'sugar-drop-saga-profile';
 
@@ -8,6 +9,7 @@ export function getDefaultProfile(): PersistedProfile {
     tutorialDismissed: false,
     soundEnabled: true,
     reducedMotion: prefersReducedMotion(),
+    candyThemeId: DEFAULT_THEME_ID,
   };
 }
 
