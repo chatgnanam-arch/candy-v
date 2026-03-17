@@ -40,6 +40,7 @@ describe('App', () => {
     expect(screen.getByRole('grid', { name: 'Match 3 board' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Opening the tray' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Read the next best turn' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Preview the next universe' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Recent board moments' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Track the session rhythm' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Read the score pace' })).toBeInTheDocument();

@@ -51,6 +51,12 @@ function App() {
     hintActive: game.hintPositions.length > 0,
     prismLabel: activeTheme.prismLabel,
   });
+  const futurePeek = getFuturePeek({
+    board,
+    validMoves,
+    prismLabel: activeTheme.prismLabel,
+    candyLabels: activeTheme.candyLabels,
+  });
   const runLedger = getRunLedger({
     runStats: game.runStats,
     boardScore: board.score,
@@ -544,6 +550,47 @@ function App() {
               </article>
             ))}
           </div>
+        </section>
+
+        <section className="future-panel" aria-label="Parallel tray">
+          <div className="future-panel__header">
+            <span className="eyebrow">Parallel Tray</span>
+            <h2>Preview the next universe</h2>
+            <p>{futurePeek.summary}</p>
+          </div>
+          <article className={`future-hero future-hero--${futurePeek.tone}`}>
+            <div className="future-hero__topline">
+              <span className="future-hero__badge">{futurePeek.badge}</span>
+              <span className="future-hero__lane">{futurePeek.lane}</span>
+            </div>
+            <div className="future-hero__layout">
+              <div className="future-mini-board" aria-hidden="true">
+                {futurePeek.previewCells.map((cell) => (
+                  <span
+                    key={`${cell.row}-${cell.col}`}
+                    className={[
+                      'future-mini-board__cell',
+                      cell.color ? `future-mini-board__cell--${cell.color}` : 'future-mini-board__cell--empty',
+                      cell.special ? `future-mini-board__cell--${cell.special}` : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                  />
+                ))}
+              </div>
+              <div className="future-hero__copy">
+                <h3>{futurePeek.title}</h3>
+                <p>{futurePeek.body}</p>
+              </div>
+            </div>
+            <div className="future-hero__chips">
+              {futurePeek.chips.map((chip) => (
+                <span key={chip} className="future-chip">
+                  {chip}
+                </span>
+              ))}
+            </div>
+          </article>
         </section>
 
         <section className="chronicle-panel" aria-label="Candy chronicle">
@@ -1794,6 +1841,26 @@ type MoveAnalysis = {
   createsStripe: boolean;
   cascadeCount: number;
   totalScore: number;
+  resultBoard: BoardState | null;
+  autoShuffled: boolean;
+};
+
+type FuturePeekCell = {
+  row: number;
+  col: number;
+  color: string | null;
+  special: string | null;
+};
+
+type FuturePeek = {
+  badge: string;
+  title: string;
+  body: string;
+  summary: string;
+  lane: string;
+  tone: 'future' | 'special' | 'cascade' | 'steady' | 'locked';
+  chips: string[];
+  previewCells: FuturePeekCell[];
 };
 
 function getMoveCoach(input: {
@@ -1933,6 +2000,99 @@ function getMoveCoach(input: {
   };
 }
 
+function getFuturePeek(input: {
+  board: BoardState;
+  validMoves: Swap[];
+  prismLabel: string;
+  candyLabels: CandyTheme['candyLabels'];
+}): FuturePeek {
+  if (input.validMoves.length === 0) {
+    return {
+      badge: 'No future path',
+      title: 'The tray is locked right now',
+      body: 'There is no scoring future to preview because no legal swaps are visible on the board. A shuffle will reopen the next universe.',
+      summary: 'This feature simulates the best move outcome, but the tray needs a legal move first.',
+      lane: 'Shuffle needed',
+      tone: 'locked',
+      chips: ['0 live swaps', 'No preview board', 'Shuffle to reopen'],
+      previewCells: flattenPreviewBoard(input.board),
+    };
+  }
+
+  const analyses = input.validMoves
+    .map((move) => analyzeMove(input.board, move))
+    .sort((left, right) => {
+      if (Number(right.createsPrism) !== Number(left.createsPrism)) {
+        return Number(right.createsPrism) - Number(left.createsPrism);
+      }
+
+      if (Number(right.createsStripe) !== Number(left.createsStripe)) {
+        return Number(right.createsStripe) - Number(left.createsStripe);
+      }
+
+      if (right.cascadeCount !== left.cascadeCount) {
+        return right.cascadeCount - left.cascadeCount;
+      }
+
+      return right.totalScore - left.totalScore;
+    });
+
+  const bestMove = analyses[0];
+  const lane = describeMoveLane(bestMove.move);
+  const previewBoard = bestMove.resultBoard ?? input.board;
+  const previewCells = flattenPreviewBoard(previewBoard);
+  const autoShuffleChip = bestMove.autoShuffled ? 'Auto-shuffle follows' : 'Board stays readable';
+
+  if (bestMove.createsPrism) {
+    return {
+      badge: 'Future special',
+      title: `${input.prismLabel} appears in the preview`,
+      body: `This simulation shows the board after the strongest available line resolves. Opening ${lane.sentence} should craft a ${formatLowerLabel(input.prismLabel)} and leave the tray in a new state.`,
+      summary: 'This panel previews the likely post-move board instead of only highlighting where to tap.',
+      lane: lane.headline,
+      tone: 'special',
+      chips: [
+        `+${bestMove.totalScore.toLocaleString()} score`,
+        `${bestMove.cascadeCount} cascade${pluralize(bestMove.cascadeCount)}`,
+        autoShuffleChip,
+      ],
+      previewCells,
+    };
+  }
+
+  if (bestMove.createsStripe || bestMove.cascadeCount > 1) {
+    return {
+      badge: 'Future chain',
+      title: 'The simulated board opens into a chain turn',
+      body: `The best lane on ${lane.headline.toLowerCase()} resolves into a board with better follow-up structure, which is useful when you want to play one move ahead instead of reacting afterward.`,
+      summary: 'This is a small “what happens next” board, not just a hint arrow.',
+      lane: lane.headline,
+      tone: bestMove.createsStripe ? 'special' : 'cascade',
+      chips: [
+        `+${bestMove.totalScore.toLocaleString()} score`,
+        `${bestMove.cascadeCount} cascade${pluralize(bestMove.cascadeCount)}`,
+        bestMove.createsStripe ? 'Stripe lands' : autoShuffleChip,
+      ],
+      previewCells,
+    };
+  }
+
+  return {
+    badge: 'Future clear',
+    title: 'The preview shows a safer next board',
+    body: `No huge special lands in this branch, but the simulated board after ${lane.sentence} is cleaner and easier to read than the current tray.`,
+    summary: 'This feature lets the player see a probable next board state before taking the move.',
+    lane: lane.headline,
+    tone: 'steady',
+    chips: [
+      `+${bestMove.totalScore.toLocaleString()} score`,
+      `${bestMove.cascadeCount} cascade${pluralize(bestMove.cascadeCount)}`,
+      autoShuffleChip,
+    ],
+    previewCells,
+  };
+}
+
 function analyzeMove(board: BoardState, move: Swap): MoveAnalysis {
   const attempt = trySwap(board, move);
   const groups = attempt.resolveResult?.steps.flatMap((step) => step.matchedGroups) ?? [];
@@ -1946,7 +2106,20 @@ function analyzeMove(board: BoardState, move: Swap): MoveAnalysis {
     createsStripe: createdSpecials.some((special) => special === 'stripedH' || special === 'stripedV'),
     cascadeCount: attempt.resolveResult?.steps.length ?? 0,
     totalScore: attempt.resolveResult?.totalScore ?? 0,
+    resultBoard: attempt.resolveResult?.board ?? null,
+    autoShuffled: attempt.resolveResult?.autoShuffled ?? false,
   };
+}
+
+function flattenPreviewBoard(board: BoardState): FuturePeekCell[] {
+  return board.grid.flatMap((row, rowIndex) =>
+    row.map((tile, colIndex) => ({
+      row: rowIndex,
+      col: colIndex,
+      color: tile?.color ?? null,
+      special: tile?.special ?? null,
+    })),
+  );
 }
 
 function describeMoveLane(move: Swap): {
