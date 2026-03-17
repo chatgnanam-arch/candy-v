@@ -1,6 +1,17 @@
 import { startTransition, useEffect, useRef, useState } from 'react';
 import { createBoard, DEFAULT_GAME_CONFIG, getValidMoves, shuffleBoard as shuffleEngineBoard, trySwap } from '../game/engine';
-import type { BoardState, GameConfig, PersistedProfile, Position, ResolveResult, ResolveStep, Swap } from '../game/types';
+import type {
+  BoardState,
+  GameConfig,
+  MatchOrientation,
+  PersistedProfile,
+  Position,
+  ResolveResult,
+  ResolveStep,
+  SpecialTileType,
+  Swap,
+  TileColor,
+} from '../game/types';
 import { loadProfile, saveProfile } from '../lib/storage';
 
 const SWAP_DURATION_MS = 220;
@@ -12,9 +23,13 @@ export type BurstEffect = {
   key: string;
   row: number;
   col: number;
-  color: string;
-  special: string | null;
+  color: TileColor;
+  special: SpecialTileType | null;
   cascade: number;
+  tone: 'pop' | 'stripe' | 'prism';
+  axis: 'horizontal' | 'vertical' | 'radial';
+  power: number;
+  delay: number;
 };
 
 export type RunJournalEntry = {
@@ -446,15 +461,65 @@ function isAdjacent(from: Position, to: Position): boolean {
 }
 
 function buildEffects(board: BoardState, step: ResolveStep): BurstEffect[] {
+  const groupMeta = new Map<
+    string,
+    {
+      length: number;
+      orientation: MatchOrientation;
+      createdSpecial: SpecialTileType | null;
+    }
+  >();
+
+  for (const group of step.matchedGroups) {
+    for (const position of group.positions) {
+      const key = `${position.row}:${position.col}`;
+      const existing = groupMeta.get(key);
+
+      if (!existing || group.length >= existing.length) {
+        groupMeta.set(key, {
+          length: group.length,
+          orientation: group.orientation,
+          createdSpecial: group.createdSpecial,
+        });
+      }
+    }
+  }
+
   return step.clearedPositions.map((position) => {
     const tile = board.grid[position.row][position.col];
+    const meta = groupMeta.get(`${position.row}:${position.col}`);
+    const special = tile?.special ?? meta?.createdSpecial ?? null;
+    const tone =
+      special === 'colorBomb' || tile?.color === 'prism' || (meta?.length ?? 0) >= 5
+        ? 'prism'
+        : special === 'stripedH' || special === 'stripedV' || meta?.createdSpecial === 'stripedH' || meta?.createdSpecial === 'stripedV' || meta?.length === 4
+          ? 'stripe'
+          : 'pop';
+    const axis =
+      special === 'stripedV'
+        ? 'vertical'
+        : special === 'stripedH'
+          ? 'horizontal'
+          : tone === 'prism'
+            ? 'radial'
+            : meta?.orientation === 'vertical'
+              ? 'vertical'
+              : 'horizontal';
+    const powerBase = tone === 'prism' ? 1.34 : tone === 'stripe' ? 1.14 : 0.98;
+    const power = Math.min(1.7, powerBase + (step.cascade - 1) * 0.07 + ((meta?.length ?? 3) - 3) * 0.05);
+    const delay = Math.min(140, ((position.row + position.col) % 3) * 18 + (step.cascade - 1) * 26);
+
     return {
       key: `${step.cascade}-${position.row}-${position.col}`,
       row: position.row,
       col: position.col,
       color: tile?.color ?? 'prism',
-      special: tile?.special ?? null,
+      special,
       cascade: step.cascade,
+      tone,
+      axis,
+      power,
+      delay,
     };
   });
 }

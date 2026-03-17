@@ -17,6 +17,7 @@ function App() {
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
   const [feedbackNotice, setFeedbackNotice] = useState<string | null>(null);
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
+  const [showInsights, setShowInsights] = useState(false);
   const [announcement, setAnnouncement] = useState<LiveAnnouncement | null>(null);
   const announcementSeedRef = useRef(0);
   const previousUnlockedCountRef = useRef(0);
@@ -258,22 +259,10 @@ function App() {
 
         <section className="hero-panel">
           <div className="hero-panel__copy">
-            <p className="eyebrow">Original match-3 delight</p>
             <h1>Sugar Drop Saga</h1>
-            <p className="hero-panel__summary">
-              Swap sweet drops, spark stripes, and land a prism pop before your moves run out.
-            </p>
             <div className="theme-banner" aria-label={`Active candy theme: ${activeTheme.name}`}>
-              <div>
-                <span className="theme-banner__label">Candy Theme</span>
-                <strong>{activeTheme.name}</strong>
-                <p>{activeTheme.tagline}</p>
-              </div>
-              <div className="theme-banner__swatches" aria-hidden="true">
-                {activeTheme.swatches.map((swatch) => (
-                  <span key={swatch} style={{ background: swatch }} />
-                ))}
-              </div>
+              <span className="theme-banner__label">Theme</span>
+              <strong>{activeTheme.name}</strong>
             </div>
           </div>
           <button type="button" className="glass-button" onClick={game.toggleSettings}>
@@ -281,54 +270,58 @@ function App() {
           </button>
         </section>
 
-        <section className="theme-rail" aria-label="Quick candy theme switcher">
-          <div className="theme-rail__intro">
-            <span className="theme-rail__eyebrow">Theme Deck</span>
-            <strong>{activeTheme.name}</strong>
-            <p>{activeTheme.feature}</p>
-          </div>
-          <div className="theme-rail__track">
-            {CANDY_THEMES.map((theme) => {
-              const isActive = theme.id === profile.candyThemeId;
+        {showInsights ? (
+          <>
+            <section className="theme-rail" aria-label="Quick candy theme switcher">
+              <div className="theme-rail__intro">
+                <span className="theme-rail__eyebrow">Theme Deck</span>
+                <strong>{activeTheme.name}</strong>
+                <p>{activeTheme.feature}</p>
+              </div>
+              <div className="theme-rail__track">
+                {CANDY_THEMES.map((theme) => {
+                  const isActive = theme.id === profile.candyThemeId;
 
-              return (
-                <button
-                  key={theme.id}
-                  type="button"
-                  className={`theme-chip ${isActive ? 'theme-chip--active' : ''}`}
-                  aria-label={`Switch to ${theme.name}`}
-                  aria-pressed={isActive}
-                  onClick={() => game.setPreference({ candyThemeId: theme.id })}
-                >
-                  <span className="theme-chip__name">{theme.name}</span>
-                  <span className="theme-chip__swatches" aria-hidden="true">
-                    {theme.swatches.map((swatch) => (
-                      <span key={swatch} style={{ background: swatch }} />
-                    ))}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </section>
+                  return (
+                    <button
+                      key={theme.id}
+                      type="button"
+                      className={`theme-chip ${isActive ? 'theme-chip--active' : ''}`}
+                      aria-label={`Switch to ${theme.name}`}
+                      aria-pressed={isActive}
+                      onClick={() => game.setPreference({ candyThemeId: theme.id })}
+                    >
+                      <span className="theme-chip__name">{theme.name}</span>
+                      <span className="theme-chip__swatches" aria-hidden="true">
+                        {theme.swatches.map((swatch) => (
+                          <span key={swatch} style={{ background: swatch }} />
+                        ))}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
 
-        <section className="status-marquee" aria-label="Run status ribbon">
-          <article className="status-pill status-pill--tempo">
-            <span className="status-pill__label">Run tempo</span>
-            <strong>{forecast.badge}</strong>
-          </article>
-          <article className="status-pill status-pill--dominant">
-            <span className="status-pill__label">Board lead</span>
-            <div className="status-pill__sample">
-              <span className={`sample-candy sample-candy--${dominantCandy.color}`} aria-hidden="true" />
-              <strong>{dominantCandy.label}</strong>
-            </div>
-          </article>
-          <article className="status-pill status-pill--special">
-            <span className="status-pill__label">Special load</span>
-            <strong>{specialsCount.striped + specialsCount.prism} live specials</strong>
-          </article>
-        </section>
+            <section className="status-marquee" aria-label="Run status ribbon">
+              <article className="status-pill status-pill--tempo">
+                <span className="status-pill__label">Run tempo</span>
+                <strong>{forecast.badge}</strong>
+              </article>
+              <article className="status-pill status-pill--dominant">
+                <span className="status-pill__label">Board lead</span>
+                <div className="status-pill__sample">
+                  <span className={`sample-candy sample-candy--${dominantCandy.color}`} aria-hidden="true" />
+                  <strong>{dominantCandy.label}</strong>
+                </div>
+              </article>
+              <article className="status-pill status-pill--special">
+                <span className="status-pill__label">Special load</span>
+                <strong>{specialsCount.striped + specialsCount.prism} live specials</strong>
+              </article>
+            </section>
+          </>
+        ) : null}
 
         <section className="hud-panel">
           <div className="stat-card stat-card--score">
@@ -343,20 +336,11 @@ function App() {
             <span className="stat-card__label">Moves</span>
             <strong>{board.movesRemaining}</strong>
           </div>
-          <div className="stat-card stat-card--best">
-            <span className="stat-card__label">Best</span>
-            <strong>{profile.bestScore.toLocaleString()}</strong>
-          </div>
         </section>
 
         <section className="progress-panel" aria-label="Progress to target score">
           <div className="progress-panel__header">
-            <div className="progress-panel__headline">
-              <span className="eyebrow">Prize Track</span>
-              <strong>
-                {unlockedTiers} / {starTrack.length} tiers unlocked
-              </strong>
-            </div>
+            <strong className="progress-panel__headline">Target progress</strong>
             <div className="progress-panel__scoreline">
               <span>{board.score.toLocaleString()}</span>
               <span>{board.targetScore.toLocaleString()}</span>
@@ -366,477 +350,511 @@ function App() {
             <span className="progress-panel__fill" style={{ width: `${progress}%` }} />
           </div>
           <div className="progress-panel__summary">
-            <span className="progress-panel__caption">{progress}% to the goal</span>
-            <span className="progress-panel__stage">{activeMilestone.label}</span>
+            <span className="progress-panel__caption">
+              {board.result?.outcome === 'won'
+                ? 'Goal reached for this run.'
+                : `${scoreGap.toLocaleString()} points to the goal.`}
+            </span>
+            <span className="progress-panel__stage">{progress}%</span>
           </div>
-          <div className="progress-panel__milestones" aria-label="Score milestones">
-            {starTrack.map((milestone) => (
-              <article
-                key={milestone.label}
-                className={[
-                  'milestone-card',
-                  milestone.reached ? 'milestone-card--reached' : '',
-                  !milestone.reached && nextTier?.label === milestone.label ? 'milestone-card--next' : '',
-                ]
-                  .filter(Boolean)
-                  .join(' ')}
-                aria-current={nextTier?.label === milestone.label ? 'step' : undefined}
-              >
-                <span>{milestone.label}</span>
-                <strong>{milestone.score.toLocaleString()}</strong>
-              </article>
-            ))}
-          </div>
-          <div className="progress-panel__footer">
-            <p>
-              {nextTier
-                ? `${(nextTier.score - board.score).toLocaleString()} more points unlocks ${nextTier.label}.`
-                : 'All prize tiers unlocked for this run.'}
-            </p>
-          </div>
-        </section>
-
-        <section className="run-deck" aria-label="Run insights">
-          <article className="forecast-card">
-            <span className="eyebrow">Sweet Forecast</span>
-            <h2>{forecast.title}</h2>
-            <p>{forecast.body}</p>
-            <div className="forecast-card__chips">
-              <span className="forecast-chip forecast-chip--primary">{forecast.badge}</span>
-              <span className="forecast-chip">{activeMilestone.label}</span>
-            </div>
-            <div className="forecast-card__metrics">
-              <span>{scoreGap.toLocaleString()} points to target</span>
-              <span>{board.movesRemaining} moves on the tray</span>
-            </div>
-          </article>
-
-          <article className="spotlight-card">
-            <span className="eyebrow">Board Spotlight</span>
-            <div className="spotlight-card__hero">
-              <span className={`sample-candy sample-candy--${spotlightCandyClass} spotlight-card__sample`} aria-hidden="true" />
-              <div>
-                <h2>{selectionLabel ? selectionLabel : activeTheme.prismLabel}</h2>
+          {showInsights ? (
+            <>
+              <div className="progress-panel__milestones" aria-label="Score milestones">
+                {starTrack.map((milestone) => (
+                  <article
+                    key={milestone.label}
+                    className={[
+                      'milestone-card',
+                      milestone.reached ? 'milestone-card--reached' : '',
+                      !milestone.reached && nextTier?.label === milestone.label ? 'milestone-card--next' : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                    aria-current={nextTier?.label === milestone.label ? 'step' : undefined}
+                  >
+                    <span>{milestone.label}</span>
+                    <strong>{milestone.score.toLocaleString()}</strong>
+                  </article>
+                ))}
+              </div>
+              <div className="progress-panel__footer">
                 <p>
-                  {selectionLabel
-                    ? board.selected
-                      ? `Selected at row ${board.selected.row + 1}, column ${board.selected.col + 1}.`
-                      : 'Selected candy is ready for your next move.'
-                    : `No candy selected yet. Watch for ${activeTheme.prismLabel} setups as the board opens.`}
+                  {nextTier
+                    ? `${(nextTier.score - board.score).toLocaleString()} more points unlocks ${nextTier.label}.`
+                    : 'All prize tiers unlocked for this run.'}
                 </p>
               </div>
-            </div>
-            <div className="spotlight-card__chips">
-              <span className="forecast-chip forecast-chip--soft">{selectionSpecialLabel}</span>
-              <span className="forecast-chip">{activeTheme.collectionName}</span>
-            </div>
-            <div className="spotlight-card__stats">
-              <div>
-                <strong>{specialsCount.striped}</strong>
-                <span>striped candies live</span>
-              </div>
-              <div>
-                <strong>{specialsCount.prism}</strong>
-                <span>{activeTheme.prismLabel.toLowerCase()} live</span>
-              </div>
-            </div>
-          </article>
+            </>
+          ) : null}
         </section>
 
-        <section className="session-pass" aria-label="Arcade session pass">
-          <article className="ticket-card">
-            <span className="eyebrow">Session Badge</span>
-            <h2>{runBadge.title}</h2>
-            <p>{runBadge.body}</p>
-            <div className="ticket-card__meta">
-              <span>{runBadge.ribbon}</span>
-              <span>{activeMilestone.label}</span>
-            </div>
-          </article>
-
-          <article className="recipe-card">
-            <span className="eyebrow">Board Recipe</span>
-            <h2>Combo ladder</h2>
-            <div className="recipe-card__grid">
-              <div className="recipe-pill">
-                <span className="recipe-pill__count">3</span>
-                <strong>steady clear</strong>
-              </div>
-              <div className="recipe-pill">
-                <span className="recipe-pill__count">4</span>
-                <strong>stripe mint</strong>
-              </div>
-              <div className="recipe-pill">
-                <span className="recipe-pill__count">5</span>
-                <strong>{activeTheme.prismLabel.toLowerCase()}</strong>
-              </div>
-            </div>
-          </article>
+        <section className="focus-panel" aria-label="Player focus controls">
+          <span className="focus-panel__summary">
+            {showInsights ? 'Strategy Studio is open.' : 'Extra strategy panels are hidden.'}
+          </span>
+          <button
+            type="button"
+            className="action-button"
+            aria-expanded={showInsights}
+            onClick={() => setShowInsights((current) => !current)}
+          >
+            {showInsights ? 'Hide Strategy Studio' : 'Show Strategy Studio'}
+          </button>
         </section>
 
-        <section className="run-checklist" aria-label="Run checklist">
-          <div className="run-checklist__header">
-            <span className="eyebrow">Run Checklist</span>
-            <h2>What to chase next</h2>
-            <p>These live goals update with the board so the next high-value move is easier to spot.</p>
-          </div>
-          <div className="run-checklist__grid">
-            {runChecklist.map((item) => (
-              <article key={item.title} className={`checklist-card checklist-card--${item.state}`}>
-                <span className="checklist-card__state">{item.stateLabel}</span>
-                <strong>{item.title}</strong>
-                <p>{item.detail}</p>
+        {showInsights ? (
+          <>
+            <section className="run-deck" aria-label="Run insights">
+              <article className="forecast-card">
+                <span className="eyebrow">Sweet Forecast</span>
+                <h2>{forecast.title}</h2>
+                <p>{forecast.body}</p>
+                <div className="forecast-card__chips">
+                  <span className="forecast-chip forecast-chip--primary">{forecast.badge}</span>
+                  <span className="forecast-chip">{activeMilestone.label}</span>
+                </div>
+                <div className="forecast-card__metrics">
+                  <span>{scoreGap.toLocaleString()} points to target</span>
+                  <span>{board.movesRemaining} moves on the tray</span>
+                </div>
               </article>
-            ))}
-          </div>
-        </section>
+
+              <article className="spotlight-card">
+                <span className="eyebrow">Board Spotlight</span>
+                <div className="spotlight-card__hero">
+                  <span
+                    className={`sample-candy sample-candy--${spotlightCandyClass} spotlight-card__sample`}
+                    aria-hidden="true"
+                  />
+                  <div>
+                    <h2>{selectionLabel ? selectionLabel : activeTheme.prismLabel}</h2>
+                    <p>
+                      {selectionLabel
+                        ? board.selected
+                          ? `Selected at row ${board.selected.row + 1}, column ${board.selected.col + 1}.`
+                          : 'Selected candy is ready for your next move.'
+                        : `No candy selected yet. Watch for ${activeTheme.prismLabel} setups as the board opens.`}
+                    </p>
+                  </div>
+                </div>
+                <div className="spotlight-card__chips">
+                  <span className="forecast-chip forecast-chip--soft">{selectionSpecialLabel}</span>
+                  <span className="forecast-chip">{activeTheme.collectionName}</span>
+                </div>
+                <div className="spotlight-card__stats">
+                  <div>
+                    <strong>{specialsCount.striped}</strong>
+                    <span>striped candies live</span>
+                  </div>
+                  <div>
+                    <strong>{specialsCount.prism}</strong>
+                    <span>{activeTheme.prismLabel.toLowerCase()} live</span>
+                  </div>
+                </div>
+              </article>
+            </section>
+
+            <section className="session-pass" aria-label="Arcade session pass">
+              <article className="ticket-card">
+                <span className="eyebrow">Session Badge</span>
+                <h2>{runBadge.title}</h2>
+                <p>{runBadge.body}</p>
+                <div className="ticket-card__meta">
+                  <span>{runBadge.ribbon}</span>
+                  <span>{activeMilestone.label}</span>
+                </div>
+              </article>
+
+              <article className="recipe-card">
+                <span className="eyebrow">Board Recipe</span>
+                <h2>Combo ladder</h2>
+                <div className="recipe-card__grid">
+                  <div className="recipe-pill">
+                    <span className="recipe-pill__count">3</span>
+                    <strong>steady clear</strong>
+                  </div>
+                  <div className="recipe-pill">
+                    <span className="recipe-pill__count">4</span>
+                    <strong>stripe mint</strong>
+                  </div>
+                  <div className="recipe-pill">
+                    <span className="recipe-pill__count">5</span>
+                    <strong>{activeTheme.prismLabel.toLowerCase()}</strong>
+                  </div>
+                </div>
+              </article>
+            </section>
+
+            <section className="run-checklist" aria-label="Run checklist">
+              <div className="run-checklist__header">
+                <span className="eyebrow">Run Checklist</span>
+                <h2>What to chase next</h2>
+                <p>These live goals update with the board so the next high-value move is easier to spot.</p>
+              </div>
+              <div className="run-checklist__grid">
+                {runChecklist.map((item) => (
+                  <article key={item.title} className={`checklist-card checklist-card--${item.state}`}>
+                    <span className="checklist-card__state">{item.stateLabel}</span>
+                    <strong>{item.title}</strong>
+                    <p>{item.detail}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
+          </>
+        ) : null}
 
         <section className="board-panel">
-          <div className="board-panel__header">
-            <div>
-              <span className="board-panel__eyebrow">Board Tray</span>
-              <strong>{activeTheme.collectionName}</strong>
+          {showInsights ? (
+            <div className="board-panel__header">
+              <div>
+                <span className="board-panel__eyebrow">Board Tray</span>
+                <strong>{activeTheme.collectionName}</strong>
+              </div>
+              <span className="board-panel__badge">{activeTheme.prismLabel}</span>
             </div>
-            <span className="board-panel__badge">{activeTheme.prismLabel}</span>
-          </div>
+          ) : null}
           <GameBoard
             board={board}
             candyLabels={activeTheme.candyLabels}
             prismLabel={activeTheme.prismLabel}
             effects={game.effects}
+            reducedMotion={profile.reducedMotion}
             hintPositions={game.hintPositions}
             disabled={game.isBusy || overlaysOpen}
             onSelect={game.selectTile}
           />
-          <div className="board-panel__hintbar">
-            <span className="board-panel__hintlabel">Move help</span>
-            <p>
-              {game.hintPositions.length > 0
-                ? 'Highlighted candies show one possible scoring swap.'
-                : 'Tap Hint when you want a quick nudge toward a valid move.'}
-            </p>
-          </div>
+          {game.hintPositions.length > 0 ? (
+            <div className="board-panel__hintbar">
+              <span className="board-panel__hintlabel">Hint</span>
+              <p>Highlighted candies show one possible scoring swap.</p>
+            </div>
+          ) : null}
         </section>
 
-        <section className="move-coach" aria-label="Move coach">
-          <div className="move-coach__header">
-            <span className="eyebrow">Swap Studio</span>
-            <h2>Read the next best turn</h2>
-            <p>{moveCoach.summary}</p>
-          </div>
+        {showInsights ? (
+          <>
+            <section className="move-coach" aria-label="Move coach">
+              <div className="move-coach__header">
+                <span className="eyebrow">Swap Studio</span>
+                <h2>Read the next best turn</h2>
+                <p>{moveCoach.summary}</p>
+              </div>
 
-          <article className={`coach-hero coach-hero--${moveCoach.tone}`}>
-            <div className="coach-hero__topline">
-              <span className="coach-hero__badge">{moveCoach.badge}</span>
-              <span className="coach-hero__count">{moveCoach.validMoveCount} live swaps</span>
-            </div>
-            <h3>{moveCoach.title}</h3>
-            <p>{moveCoach.body}</p>
-            <div className="coach-hero__chips">
-              {moveCoach.chips.map((chip) => (
-                <span key={chip} className="coach-chip">
-                  {chip}
-                </span>
-              ))}
-            </div>
-          </article>
-
-          <div className="move-coach__grid">
-            {moveCoach.cards.map((card) => (
-              <article key={card.label} className="coach-metric">
-                <span className="coach-metric__label">{card.label}</span>
-                <strong>{card.value}</strong>
-                <p>{card.note}</p>
+              <article className={`coach-hero coach-hero--${moveCoach.tone}`}>
+                <div className="coach-hero__topline">
+                  <span className="coach-hero__badge">{moveCoach.badge}</span>
+                  <span className="coach-hero__count">{moveCoach.validMoveCount} live swaps</span>
+                </div>
+                <h3>{moveCoach.title}</h3>
+                <p>{moveCoach.body}</p>
+                <div className="coach-hero__chips">
+                  {moveCoach.chips.map((chip) => (
+                    <span key={chip} className="coach-chip">
+                      {chip}
+                    </span>
+                  ))}
+                </div>
               </article>
-            ))}
-          </div>
-        </section>
 
-        <section className="future-panel" aria-label="Parallel tray">
-          <div className="future-panel__header">
-            <span className="eyebrow">Parallel Tray</span>
-            <h2>Preview the next universe</h2>
-            <p>{futurePeek.summary}</p>
-          </div>
-          <article className={`future-hero future-hero--${futurePeek.tone}`}>
-            <div className="future-hero__topline">
-              <span className="future-hero__badge">{futurePeek.badge}</span>
-              <span className="future-hero__lane">{futurePeek.lane}</span>
-            </div>
-            <div className="future-hero__layout">
-              <div className="future-mini-board" aria-hidden="true">
-                {futurePeek.previewCells.map((cell) => (
-                  <span
-                    key={`${cell.row}-${cell.col}`}
-                    className={[
-                      'future-mini-board__cell',
-                      cell.color ? `future-mini-board__cell--${cell.color}` : 'future-mini-board__cell--empty',
-                      cell.special ? `future-mini-board__cell--${cell.special}` : '',
-                    ]
-                      .filter(Boolean)
-                      .join(' ')}
-                  />
+              <div className="move-coach__grid">
+                {moveCoach.cards.map((card) => (
+                  <article key={card.label} className="coach-metric">
+                    <span className="coach-metric__label">{card.label}</span>
+                    <strong>{card.value}</strong>
+                    <p>{card.note}</p>
+                  </article>
                 ))}
               </div>
-              <div className="future-hero__copy">
-                <h3>{futurePeek.title}</h3>
-                <p>{futurePeek.body}</p>
+            </section>
+
+            <section className="future-panel" aria-label="Parallel tray">
+              <div className="future-panel__header">
+                <span className="eyebrow">Parallel Tray</span>
+                <h2>Preview the next universe</h2>
+                <p>{futurePeek.summary}</p>
               </div>
-            </div>
-            <div className="future-hero__chips">
-              {futurePeek.chips.map((chip) => (
-                <span key={chip} className="future-chip">
-                  {chip}
-                </span>
-              ))}
-            </div>
-          </article>
-        </section>
-
-        <section className="chronicle-panel" aria-label="Candy chronicle">
-          <div className="chronicle-panel__header">
-            <span className="eyebrow">Candy Chronicle</span>
-            <h2>Recent board moments</h2>
-            <p>The live journal keeps a short memory of hints, swaps, cascades, and tray resets during the run.</p>
-          </div>
-          <div className="chronicle-panel__list">
-            {game.journal.map((entry) => (
-              <article key={entry.id} className={`journal-card journal-card--${entry.tone}`}>
-                <div className="journal-card__topline">
-                  <span className="journal-card__tone">{formatJournalTone(entry.tone)}</span>
-                  <span className="journal-card__stat">{entry.stat}</span>
+              <article className={`future-hero future-hero--${futurePeek.tone}`}>
+                <div className="future-hero__topline">
+                  <span className="future-hero__badge">{futurePeek.badge}</span>
+                  <span className="future-hero__lane">{futurePeek.lane}</span>
                 </div>
-                <strong>{entry.title}</strong>
-                <p>{entry.detail}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="ledger-panel" aria-label="Run ledger">
-          <div className="ledger-panel__header">
-            <span className="eyebrow">Run Ledger</span>
-            <h2>Track the session rhythm</h2>
-            <p>{runLedger.summary}</p>
-          </div>
-          <article className={`ledger-hero ledger-hero--${runLedger.tone}`}>
-            <div className="ledger-hero__topline">
-              <span className="ledger-hero__badge">{runLedger.badge}</span>
-              <span className="ledger-hero__pace">{runLedger.pace}</span>
-            </div>
-            <h3>{runLedger.title}</h3>
-            <p>{runLedger.body}</p>
-            <div className="ledger-hero__chips">
-              {runLedger.chips.map((chip) => (
-                <span key={chip} className="ledger-chip">
-                  {chip}
-                </span>
-              ))}
-            </div>
-          </article>
-          <div className="ledger-panel__grid">
-            {runLedger.cards.map((card) => (
-              <article key={card.label} className="ledger-card">
-                <span className="ledger-card__label">{card.label}</span>
-                <strong>{card.value}</strong>
-                <p>{card.note}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="pace-panel" aria-label="Score pace">
-          <div className="pace-panel__header">
-            <span className="eyebrow">Sugar Math</span>
-            <h2>Read the score pace</h2>
-            <p>{paceStudio.summary}</p>
-          </div>
-          <article className={`pace-hero pace-hero--${paceStudio.tone}`}>
-            <div className="pace-hero__topline">
-              <span className="pace-hero__badge">{paceStudio.badge}</span>
-              <span className="pace-hero__gap">{paceStudio.gapLabel}</span>
-            </div>
-            <h3>{paceStudio.title}</h3>
-            <p>{paceStudio.body}</p>
-            <div className="pace-hero__chips">
-              {paceStudio.chips.map((chip) => (
-                <span key={chip} className="pace-chip">
-                  {chip}
-                </span>
-              ))}
-            </div>
-          </article>
-          <div className="pace-panel__grid">
-            {paceStudio.cards.map((card) => (
-              <article key={card.label} className="pace-card">
-                <span className="pace-card__label">{card.label}</span>
-                <strong>{card.value}</strong>
-                <p>{card.note}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="budget-panel" aria-label="Move budget">
-          <div className="budget-panel__header">
-            <span className="eyebrow">Move Budget</span>
-            <h2>Guard the move jar</h2>
-            <p>{moveBudget.summary}</p>
-          </div>
-          <article className={`budget-hero budget-hero--${moveBudget.tone}`}>
-            <div className="budget-hero__topline">
-              <span className="budget-hero__badge">{moveBudget.badge}</span>
-              <span className="budget-hero__cushion">{moveBudget.cushionLabel}</span>
-            </div>
-            <h3>{moveBudget.title}</h3>
-            <p>{moveBudget.body}</p>
-            <div className="budget-hero__chips">
-              {moveBudget.chips.map((chip) => (
-                <span key={chip} className="budget-chip">
-                  {chip}
-                </span>
-              ))}
-            </div>
-          </article>
-          <div className="budget-panel__grid">
-            {moveBudget.cards.map((card) => (
-              <article key={card.label} className="budget-card">
-                <span className="budget-card__label">{card.label}</span>
-                <strong>{card.value}</strong>
-                <p>{card.note}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="trophy-panel" aria-label="Trophy cabinet">
-          <div className="trophy-panel__header">
-            <span className="eyebrow">Trophy Cabinet</span>
-            <h2>Unlock sweet run badges</h2>
-            <p>
-              {trophyCabinet.unlockedCount} / {trophyCabinet.trophies.length} badges earned this run.{' '}
-              {trophyCabinet.summary}
-            </p>
-          </div>
-          <article className={`trophy-spotlight trophy-spotlight--${trophyCabinet.spotlight.tone}`}>
-            <div className="trophy-spotlight__topline">
-              <span className="trophy-spotlight__badge">{trophyCabinet.spotlight.badge}</span>
-              <span className="trophy-spotlight__count">
-                {trophyCabinet.unlockedCount} / {trophyCabinet.trophies.length}
-              </span>
-            </div>
-            <h3>{trophyCabinet.spotlight.title}</h3>
-            <p>{trophyCabinet.spotlight.body}</p>
-            <div className="trophy-spotlight__chips">
-              {trophyCabinet.spotlight.chips.map((chip) => (
-                <span key={chip} className="trophy-spotlight__chip">
-                  {chip}
-                </span>
-              ))}
-            </div>
-          </article>
-          <div className="trophy-panel__grid">
-            {trophyCabinet.trophies.map((trophy) => (
-              <article key={trophy.title} className={`trophy-card trophy-card--${trophy.state}`}>
-                <div className="trophy-card__topline">
-                  <span className="trophy-card__stamp">{trophy.stamp}</span>
-                  <span className="trophy-card__progress">{trophy.progress}</span>
+                <div className="future-hero__layout">
+                  <div className="future-mini-board" aria-hidden="true">
+                    {futurePeek.previewCells.map((cell) => (
+                      <span
+                        key={`${cell.row}-${cell.col}`}
+                        className={[
+                          'future-mini-board__cell',
+                          cell.color ? `future-mini-board__cell--${cell.color}` : 'future-mini-board__cell--empty',
+                          cell.special ? `future-mini-board__cell--${cell.special}` : '',
+                        ]
+                          .filter(Boolean)
+                          .join(' ')}
+                      />
+                    ))}
+                  </div>
+                  <div className="future-hero__copy">
+                    <h3>{futurePeek.title}</h3>
+                    <p>{futurePeek.body}</p>
+                  </div>
                 </div>
-                <strong>{trophy.title}</strong>
-                <p>{trophy.detail}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="tray-mix" aria-label="Live board candy mix">
-          <div className="tray-mix__header">
-            <span className="eyebrow">Tray Mix</span>
-            <h2>Live candy balance</h2>
-            <p>Scan the current candy spread to spot heavy colors and easier follow-up matches.</p>
-          </div>
-          <div className="tray-mix__grid">
-            {boardMix.map((mix) => (
-              <article key={mix.color} className="mix-card">
-                <span className={`sample-candy sample-candy--${mix.color}`} aria-hidden="true" />
-                <div className="mix-card__copy">
-                  <strong>{mix.label}</strong>
-                  <span>{mix.count} on board</span>
+                <div className="future-hero__chips">
+                  {futurePeek.chips.map((chip) => (
+                    <span key={chip} className="future-chip">
+                      {chip}
+                    </span>
+                  ))}
                 </div>
               </article>
-            ))}
-          </div>
-        </section>
+            </section>
 
-        <section className="collection-shelf" aria-label={`${activeTheme.collectionName} candy collection`}>
-          <div className="collection-shelf__header">
-            <span className="eyebrow">Candy Collection</span>
-            <h2>{activeTheme.collectionName}</h2>
-            <p>{activeTheme.feature}</p>
-          </div>
-          <div className="collection-shelf__grid">
-            {collectionCandies.map((candy) => (
-              <article key={candy.color} className="collection-card">
-                <span className={`sample-candy sample-candy--${candy.color}`} aria-hidden="true" />
-                <div className="collection-card__copy">
-                  <strong>{candy.label}</strong>
-                  <span>{candy.color}</span>
-                </div>
-              </article>
-            ))}
-            <article className="collection-card collection-card--prism">
-              <span className="sample-candy sample-candy--prism" aria-hidden="true" />
-              <div className="collection-card__copy">
-                <strong>{activeTheme.prismLabel}</strong>
-                <span>special candy</span>
+            <section className="chronicle-panel" aria-label="Candy chronicle">
+              <div className="chronicle-panel__header">
+                <span className="eyebrow">Candy Chronicle</span>
+                <h2>Recent board moments</h2>
+                <p>The live journal keeps a short memory of hints, swaps, cascades, and tray resets during the run.</p>
               </div>
-            </article>
-          </div>
-        </section>
+              <div className="chronicle-panel__list">
+                {game.journal.map((entry) => (
+                  <article key={entry.id} className={`journal-card journal-card--${entry.tone}`}>
+                    <div className="journal-card__topline">
+                      <span className="journal-card__tone">{formatJournalTone(entry.tone)}</span>
+                      <span className="journal-card__stat">{entry.stat}</span>
+                    </div>
+                    <strong>{entry.title}</strong>
+                    <p>{entry.detail}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
 
-        <section className="sweet-notes" aria-label={`${activeTheme.name} theme notes`}>
-          <article className="story-card">
-            <div className="story-card__header">
-              <span className="eyebrow">Theme Notes</span>
-              <h2>{activeTheme.name} tasting notes</h2>
-            </div>
-            <div className="story-card__chips">
-              {activeTheme.notes.map((note) => (
-                <span key={note} className="story-chip">
-                  {note}
-                </span>
-              ))}
-            </div>
-            <p className="story-card__body">
-              {activeTheme.collectionName} is tuned for a {activeTheme.mood.toLowerCase()} board mood, so every candy
-              read, tray accent, and burst effect leans into the same sweet-shop identity.
-            </p>
-          </article>
+            <section className="ledger-panel" aria-label="Run ledger">
+              <div className="ledger-panel__header">
+                <span className="eyebrow">Run Ledger</span>
+                <h2>Track the session rhythm</h2>
+                <p>{runLedger.summary}</p>
+              </div>
+              <article className={`ledger-hero ledger-hero--${runLedger.tone}`}>
+                <div className="ledger-hero__topline">
+                  <span className="ledger-hero__badge">{runLedger.badge}</span>
+                  <span className="ledger-hero__pace">{runLedger.pace}</span>
+                </div>
+                <h3>{runLedger.title}</h3>
+                <p>{runLedger.body}</p>
+                <div className="ledger-hero__chips">
+                  {runLedger.chips.map((chip) => (
+                    <span key={chip} className="ledger-chip">
+                      {chip}
+                    </span>
+                  ))}
+                </div>
+              </article>
+              <div className="ledger-panel__grid">
+                {runLedger.cards.map((card) => (
+                  <article key={card.label} className="ledger-card">
+                    <span className="ledger-card__label">{card.label}</span>
+                    <strong>{card.value}</strong>
+                    <p>{card.note}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
 
-          <article className="specials-panel">
-            <div className="specials-panel__header">
-              <span className="eyebrow">Specials Guide</span>
-              <h2>Build bigger power-ups</h2>
-            </div>
-            <div className="specials-grid">
-              <article className="special-card">
-                <span className="special-card__count">3</span>
-                <strong>Clean Clear</strong>
-                <p>Use quick 3-matches to steady the board and open space for chain reactions.</p>
+            <section className="pace-panel" aria-label="Score pace">
+              <div className="pace-panel__header">
+                <span className="eyebrow">Sugar Math</span>
+                <h2>Read the score pace</h2>
+                <p>{paceStudio.summary}</p>
+              </div>
+              <article className={`pace-hero pace-hero--${paceStudio.tone}`}>
+                <div className="pace-hero__topline">
+                  <span className="pace-hero__badge">{paceStudio.badge}</span>
+                  <span className="pace-hero__gap">{paceStudio.gapLabel}</span>
+                </div>
+                <h3>{paceStudio.title}</h3>
+                <p>{paceStudio.body}</p>
+                <div className="pace-hero__chips">
+                  {paceStudio.chips.map((chip) => (
+                    <span key={chip} className="pace-chip">
+                      {chip}
+                    </span>
+                  ))}
+                </div>
               </article>
-              <article className="special-card">
-                <span className="special-card__count">4</span>
-                <strong>Striped Candy</strong>
-                <p>Line up four to mint a stripe that clears a full row or column on activation.</p>
+              <div className="pace-panel__grid">
+                {paceStudio.cards.map((card) => (
+                  <article key={card.label} className="pace-card">
+                    <span className="pace-card__label">{card.label}</span>
+                    <strong>{card.value}</strong>
+                    <p>{card.note}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
+
+            <section className="budget-panel" aria-label="Move budget">
+              <div className="budget-panel__header">
+                <span className="eyebrow">Move Budget</span>
+                <h2>Guard the move jar</h2>
+                <p>{moveBudget.summary}</p>
+              </div>
+              <article className={`budget-hero budget-hero--${moveBudget.tone}`}>
+                <div className="budget-hero__topline">
+                  <span className="budget-hero__badge">{moveBudget.badge}</span>
+                  <span className="budget-hero__cushion">{moveBudget.cushionLabel}</span>
+                </div>
+                <h3>{moveBudget.title}</h3>
+                <p>{moveBudget.body}</p>
+                <div className="budget-hero__chips">
+                  {moveBudget.chips.map((chip) => (
+                    <span key={chip} className="budget-chip">
+                      {chip}
+                    </span>
+                  ))}
+                </div>
               </article>
-              <article className="special-card">
-                <span className="special-card__count">5</span>
-                <strong>{activeTheme.prismLabel}</strong>
-                <p>Save 5-in-a-row turns for crowded boards so the prism can break open tough layouts.</p>
+              <div className="budget-panel__grid">
+                {moveBudget.cards.map((card) => (
+                  <article key={card.label} className="budget-card">
+                    <span className="budget-card__label">{card.label}</span>
+                    <strong>{card.value}</strong>
+                    <p>{card.note}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
+
+            <section className="trophy-panel" aria-label="Trophy cabinet">
+              <div className="trophy-panel__header">
+                <span className="eyebrow">Trophy Cabinet</span>
+                <h2>Unlock sweet run badges</h2>
+                <p>
+                  {trophyCabinet.unlockedCount} / {trophyCabinet.trophies.length} badges earned this run.{' '}
+                  {trophyCabinet.summary}
+                </p>
+              </div>
+              <article className={`trophy-spotlight trophy-spotlight--${trophyCabinet.spotlight.tone}`}>
+                <div className="trophy-spotlight__topline">
+                  <span className="trophy-spotlight__badge">{trophyCabinet.spotlight.badge}</span>
+                  <span className="trophy-spotlight__count">
+                    {trophyCabinet.unlockedCount} / {trophyCabinet.trophies.length}
+                  </span>
+                </div>
+                <h3>{trophyCabinet.spotlight.title}</h3>
+                <p>{trophyCabinet.spotlight.body}</p>
+                <div className="trophy-spotlight__chips">
+                  {trophyCabinet.spotlight.chips.map((chip) => (
+                    <span key={chip} className="trophy-spotlight__chip">
+                      {chip}
+                    </span>
+                  ))}
+                </div>
               </article>
-            </div>
-          </article>
-        </section>
+              <div className="trophy-panel__grid">
+                {trophyCabinet.trophies.map((trophy) => (
+                  <article key={trophy.title} className={`trophy-card trophy-card--${trophy.state}`}>
+                    <div className="trophy-card__topline">
+                      <span className="trophy-card__stamp">{trophy.stamp}</span>
+                      <span className="trophy-card__progress">{trophy.progress}</span>
+                    </div>
+                    <strong>{trophy.title}</strong>
+                    <p>{trophy.detail}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
+
+            <section className="tray-mix" aria-label="Live board candy mix">
+              <div className="tray-mix__header">
+                <span className="eyebrow">Tray Mix</span>
+                <h2>Live candy balance</h2>
+                <p>Scan the current candy spread to spot heavy colors and easier follow-up matches.</p>
+              </div>
+              <div className="tray-mix__grid">
+                {boardMix.map((mix) => (
+                  <article key={mix.color} className="mix-card">
+                    <span className={`sample-candy sample-candy--${mix.color}`} aria-hidden="true" />
+                    <div className="mix-card__copy">
+                      <strong>{mix.label}</strong>
+                      <span>{mix.count} on board</span>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+
+            <section className="collection-shelf" aria-label={`${activeTheme.collectionName} candy collection`}>
+              <div className="collection-shelf__header">
+                <span className="eyebrow">Candy Collection</span>
+                <h2>{activeTheme.collectionName}</h2>
+                <p>{activeTheme.feature}</p>
+              </div>
+              <div className="collection-shelf__grid">
+                {collectionCandies.map((candy) => (
+                  <article key={candy.color} className="collection-card">
+                    <span className={`sample-candy sample-candy--${candy.color}`} aria-hidden="true" />
+                    <div className="collection-card__copy">
+                      <strong>{candy.label}</strong>
+                      <span>{candy.color}</span>
+                    </div>
+                  </article>
+                ))}
+                <article className="collection-card collection-card--prism">
+                  <span className="sample-candy sample-candy--prism" aria-hidden="true" />
+                  <div className="collection-card__copy">
+                    <strong>{activeTheme.prismLabel}</strong>
+                    <span>special candy</span>
+                  </div>
+                </article>
+              </div>
+            </section>
+
+            <section className="sweet-notes" aria-label={`${activeTheme.name} theme notes`}>
+              <article className="story-card">
+                <div className="story-card__header">
+                  <span className="eyebrow">Theme Notes</span>
+                  <h2>{activeTheme.name} tasting notes</h2>
+                </div>
+                <div className="story-card__chips">
+                  {activeTheme.notes.map((note) => (
+                    <span key={note} className="story-chip">
+                      {note}
+                    </span>
+                  ))}
+                </div>
+                <p className="story-card__body">
+                  {activeTheme.collectionName} is tuned for a {activeTheme.mood.toLowerCase()} board mood, so every
+                  candy read, tray accent, and burst effect leans into the same sweet-shop identity.
+                </p>
+              </article>
+
+              <article className="specials-panel">
+                <div className="specials-panel__header">
+                  <span className="eyebrow">Specials Guide</span>
+                  <h2>Build bigger power-ups</h2>
+                </div>
+                <div className="specials-grid">
+                  <article className="special-card">
+                    <span className="special-card__count">3</span>
+                    <strong>Clean Clear</strong>
+                    <p>Use quick 3-matches to steady the board and open space for chain reactions.</p>
+                  </article>
+                  <article className="special-card">
+                    <span className="special-card__count">4</span>
+                    <strong>Striped Candy</strong>
+                    <p>Line up four to mint a stripe that clears a full row or column on activation.</p>
+                  </article>
+                  <article className="special-card">
+                    <span className="special-card__count">5</span>
+                    <strong>{activeTheme.prismLabel}</strong>
+                    <p>Save 5-in-a-row turns for crowded boards so the prism can break open tough layouts.</p>
+                  </article>
+                </div>
+              </article>
+            </section>
+          </>
+        ) : null}
 
         <section className="action-panel">
           <button type="button" className="action-button action-button--primary" onClick={game.restartGame}>
@@ -857,34 +875,35 @@ function App() {
         </section>
 
         <section className="tip-panel">
-          <p>Match 4 to mint a stripe. Match 5 to craft a prism candy.</p>
-          <p>{feedbackNotice ?? game.statusMessage ?? 'Chain cascades to snowball your score.'}</p>
+          <p>{feedbackNotice ?? game.statusMessage ?? 'Match 4 for a stripe. Match 5 for a prism.'}</p>
         </section>
 
-        <section className="candy-lab" aria-label="Candy strategy guide">
-          <div className="candy-lab__header">
-            <span className="eyebrow">Candy Lab</span>
-            <h2>Theme-matched playbook</h2>
-            <p>{activeTheme.feature}</p>
-          </div>
-          <div className="candy-lab__grid">
-            <article className="guide-card">
-              <span className="guide-card__icon guide-card__icon--stripe" aria-hidden="true" />
-              <strong>Stripe Spark</strong>
-              <p>Push for 4-candy clears early to open lanes and swing the board sideways.</p>
-            </article>
-            <article className="guide-card">
-              <span className="guide-card__icon guide-card__icon--prism" aria-hidden="true" />
-              <strong>Prism Pop</strong>
-              <p>Hold 5-candy matches for crowded turns so the prism can rescue a stuck board.</p>
-            </article>
-            <article className="guide-card">
-              <span className="guide-card__icon guide-card__icon--cascade" aria-hidden="true" />
-              <strong>Cascade Chain</strong>
-              <p>Favor center swaps when you want drops to snowball into follow-up clears.</p>
-            </article>
-          </div>
-        </section>
+        {showInsights ? (
+          <section className="candy-lab" aria-label="Candy strategy guide">
+            <div className="candy-lab__header">
+              <span className="eyebrow">Candy Lab</span>
+              <h2>Theme-matched playbook</h2>
+              <p>{activeTheme.feature}</p>
+            </div>
+            <div className="candy-lab__grid">
+              <article className="guide-card">
+                <span className="guide-card__icon guide-card__icon--stripe" aria-hidden="true" />
+                <strong>Stripe Spark</strong>
+                <p>Push for 4-candy clears early to open lanes and swing the board sideways.</p>
+              </article>
+              <article className="guide-card">
+                <span className="guide-card__icon guide-card__icon--prism" aria-hidden="true" />
+                <strong>Prism Pop</strong>
+                <p>Hold 5-candy matches for crowded turns so the prism can rescue a stuck board.</p>
+              </article>
+              <article className="guide-card">
+                <span className="guide-card__icon guide-card__icon--cascade" aria-hidden="true" />
+                <strong>Cascade Chain</strong>
+                <p>Favor center swaps when you want drops to snowball into follow-up clears.</p>
+              </article>
+            </div>
+          </section>
+        ) : null}
       </main>
 
       {game.showTutorial ? (

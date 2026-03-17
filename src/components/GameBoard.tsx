@@ -7,6 +7,7 @@ type GameBoardProps = {
   candyLabels: Record<NormalTileColor, string>;
   prismLabel: string;
   effects: BurstEffect[];
+  reducedMotion: boolean;
   hintPositions: Position[];
   disabled: boolean;
   onSelect: (position: Position) => void;
@@ -20,7 +21,16 @@ type TilePlacement = {
   special: string | null;
 };
 
-export function GameBoard({ board, candyLabels, prismLabel, effects, hintPositions, disabled, onSelect }: GameBoardProps) {
+export function GameBoard({
+  board,
+  candyLabels,
+  prismLabel,
+  effects,
+  reducedMotion,
+  hintPositions,
+  disabled,
+  onSelect,
+}: GameBoardProps) {
   const tiles: TilePlacement[] = [];
 
   for (let row = 0; row < board.rows; row += 1) {
@@ -47,7 +57,18 @@ export function GameBoard({ board, candyLabels, prismLabel, effects, hintPositio
 
   return (
     <div className="board-shell">
-      <div className="board" style={boardStyle} role="grid" aria-label="Match 3 board">
+      <div
+        className={[
+          'board',
+          effects.length > 0 ? 'board--fx-live' : '',
+          reducedMotion ? 'board--calm' : '',
+        ]
+          .filter(Boolean)
+          .join(' ')}
+        style={boardStyle}
+        role="grid"
+        aria-label="Match 3 board"
+      >
         <div className="board__cells" aria-hidden="true">
           {Array.from({ length: board.rows * board.columns }, (_, index) => (
             <span className="board__cell" key={`cell-${index}`} />
@@ -104,11 +125,22 @@ export function GameBoard({ board, candyLabels, prismLabel, effects, hintPositio
                 'burst',
                 `burst--${effect.color}`,
                 effect.special ? `burst--${effect.special}` : '',
+                `burst--${effect.tone}`,
+                `burst--${effect.axis}`,
+                reducedMotion ? 'burst--calm' : '',
               ]
                 .filter(Boolean)
                 .join(' ')}
-              style={getTileStyle(effect.row, effect.col)}
-            />
+              style={getEffectStyle(effect)}
+            >
+              <span className="burst__halo" />
+              <span className="burst__ring" />
+              <span className="burst__sweep" />
+              <span className="burst__spark burst__spark--one" />
+              <span className="burst__spark burst__spark--two" />
+              <span className="burst__spark burst__spark--three" />
+              <span className="burst__spark burst__spark--four" />
+            </span>
           ))}
         </div>
       </div>
@@ -121,6 +153,15 @@ function getTileStyle(row: number, col: number): CSSProperties {
     gridColumn: `${col + 1}`,
     gridRow: `${row + 1}`,
   };
+}
+
+function getEffectStyle(effect: BurstEffect): CSSProperties {
+  return {
+    ...getTileStyle(effect.row, effect.col),
+    '--burst-delay': `${effect.delay}ms`,
+    '--burst-scale': `${effect.power}`,
+    '--burst-cascade': `${effect.cascade}`,
+  } as CSSProperties;
 }
 
 function describeTile(

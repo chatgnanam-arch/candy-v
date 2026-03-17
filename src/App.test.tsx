@@ -38,6 +38,21 @@ describe('App', () => {
     expect(screen.queryByRole('dialog', { name: 'Welcome to Sugar Drop Saga' })).not.toBeInTheDocument();
     expect(screen.getByText('Target')).toBeInTheDocument();
     expect(screen.getByRole('grid', { name: 'Match 3 board' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Show Strategy Studio' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Read the next best turn' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Preview the next universe' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Recent board moments' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Track the session rhythm' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Read the score pace' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Guard the move jar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Unlock sweet run badges' })).not.toBeInTheDocument();
+    expect(screen.getByText('Target progress')).toBeInTheDocument();
+    expect(screen.queryByText('Bronze Bite')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Show Strategy Studio' }));
+
+    expect(screen.getByRole('button', { name: 'Hide Strategy Studio' })).toBeInTheDocument();
+    expect(screen.getByText('Bronze Bite')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Opening the tray' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Read the next best turn' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Preview the next universe' })).toBeInTheDocument();
@@ -51,7 +66,6 @@ describe('App', () => {
     expect(screen.getByText('One clean turn will start the move-budget math.')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Live candy balance' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Sweet Scout' })).toBeInTheDocument();
-    expect(screen.getByText('Bronze Bite')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'What to chase next' })).toBeInTheDocument();
   });
 
@@ -81,7 +95,6 @@ describe('App', () => {
 
     expect(container.firstChild).toHaveAttribute('data-theme', 'citrus-splash');
     expect(screen.getByLabelText('Active candy theme: Citrus Splash')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Splash Market Mix' })).toBeInTheDocument();
   });
 
   it('shows a hint highlight when requested', async () => {
@@ -92,10 +105,14 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: 'Hint' }));
 
     expect(screen.getByText('Highlighted candies show one possible scoring swap.')).toBeInTheDocument();
-    expect(screen.getByText('Hint Lit')).toBeInTheDocument();
-    expect(screen.getAllByText('1 hint').length).toBeGreaterThan(1);
     expect(screen.getByText('Badge Earned')).toBeInTheDocument();
     expect(screen.getByText('Trail Finder just joined the cabinet for this run.')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Trail Finder', level: 3 })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Show Strategy Studio' }));
+
+    expect(screen.getByText('Hint Lit')).toBeInTheDocument();
+    expect(screen.getAllByText('1 hint').length).toBeGreaterThan(0);
     expect(screen.getByRole('heading', { name: 'Trail Finder', level: 3 })).toBeInTheDocument();
     expect(screen.getByText('You used the hint lamp to reveal a legal scoring lane during this run.')).toBeInTheDocument();
   });
